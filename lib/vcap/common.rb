@@ -12,6 +12,16 @@ module VCAP
     route ||= A_ROOT_SERVER
     orig, Socket.do_not_reverse_lookup = Socket.do_not_reverse_lookup, true
     UDPSocket.open {|s| s.connect(route, 1); s.addr.last }
+  rescue
+    # can't reach the root server: public internet is not reachable.
+    # for example a 'Host-only' private network.
+    ifconfig = File.exist?("/sbin/ifconfig") ? "/sbin/ifconfig" : "ifconfig"
+    # Linux:
+    ip=`#{ifconfig} | grep "inet addr" | grep -v "127.0.0.1" | awk '{ print $2 }' | awk -F: '{ print $2 }'`
+    # Darwin:
+    ip=`#{ifconfig} | grep "inet " | grep -v "127.0.0.1" | awk '{ print $2 }' | head -1` unless ip
+    raise "Network unreachable." unless ip
+    ip.strip
   ensure
     Socket.do_not_reverse_lookup = orig
   end

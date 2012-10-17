@@ -21,7 +21,7 @@ module VCAP
     # Darwin:
     ip=`#{ifconfig} | grep "inet " | grep -v "127.0.0.1" | awk '{ print $2 }' | head -1` unless ip
     raise "Network unreachable." unless ip
-    ip.strip
+    ip[/.*/].strip
   ensure
     Socket.do_not_reverse_lookup = orig
   end
